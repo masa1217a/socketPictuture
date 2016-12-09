@@ -8,13 +8,17 @@ import java.net.Socket;
 
 public class Server {
 	final static int PORT = 10007;	// 待受ポート番号
+	
 
 	public static void main(String[] args) {
-		
+		SetDate date = new SetDate();
+		String picName = date.str + ".bmp";
 		byte[] buffer         = new byte[512]; // ファイル受信時のバッファ
 		while(true){
+			// Server Start
+			System.out.println("Server Start...");
 			try {
-				String outputFilepath = "f.out";       // 受信したファイルの保存先
+				String outputFilepath = "/home/user/CamPic/" + picName;       // 受信したファイルの保存先
 				// ソケットの準備
 				ServerSocket serverSocket = new ServerSocket(PORT);
 				Socket       socket       = serverSocket.accept();
@@ -22,13 +26,13 @@ public class Server {
 				// ストリームの準備
 				InputStream  inputStream  = socket.getInputStream();
 				OutputStream outputStream = new FileOutputStream(outputFilepath);
-	
+				
 				// ファイルをストリームで受信
 				int fileLength;
 				while ((fileLength = inputStream.read(buffer)) > 0) {
 					outputStream.write(buffer, 0, fileLength);
 				}
-	
+				System.out.println("画像を受信");
 				// 終了処理
 				outputStream.flush();
 				outputStream.close();
