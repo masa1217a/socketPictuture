@@ -6,13 +6,13 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 
 public class DBAccess {
-	private static String sel = "PhotoID";
-	private static int photo_id;
-	private static int connect_id;
-	private static int day;
-	private static int time;
-	private static String pass = new String("/var/www/html/php/test/TEST/");
-	private static int point;
+	static String sel = "PhotoID";
+	static int photo_id;
+	static int connect_id;
+	static int day;
+	static int time;
+	static String pass;
+	static int point;
 
 
 	DBAccess(int connect_id, int day, int time, String pass, int point){
@@ -31,8 +31,8 @@ public class DBAccess {
 	            // MySQLに接続
 	        	Connection con = null;
 	            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/test_camera", "root", "superman");
-	            System.out.println("MySQLに接続できました。");
-	            PreparedStatement stm = null;
+				 
+	            PreparedStatement stm;
 	            stm = con.prepareStatement("INSERT INTO t_test VALUES(?, ?, ?, ?, ?, ?, ?, ?)");
 							stm.setInt(1, photo_id);
 							stm.setInt(2, connect_id);
@@ -44,6 +44,7 @@ public class DBAccess {
 							stm.setString(8, "");
 		        int result = stm.executeUpdate();
 		       // System.out.println("挿入できました。");
+		        System.out.println("MySQLに接続できました。");
 		        System.out.println("更新件数は" + result + "です。");
 
 		        stm.close();
@@ -63,10 +64,12 @@ public class DBAccess {
 					 Statement stmt = con.createStatement();
 					 ResultSet rs = stmt.executeQuery("select PhotoID from t_test order by PhotoID desc limit 1");
 					 while(rs.next()){
-						 photo_id = rs.getInt(sel);
+						 photo_id = rs.getInt(sel)+1;
 					 }
 					 System.out.println(photo_id);
+			 stmt.close();
            con.close();
+        	 //rs.close();
         } catch (SQLException e) {
             System.out.println("MySQLに接続できませんでした。");
         }
