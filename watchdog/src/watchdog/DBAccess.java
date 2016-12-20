@@ -60,7 +60,7 @@ public class DBAccess {
             // MySQLに接続
         	Connection con = null;
            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/test_camera", "root", "superman");
-           System.out.println("MySQLに接続できました。");
+          // System.out.println("MySQLに接続できました。");
 					 Statement stmt = con.createStatement();
 					 ResultSet rs = stmt.executeQuery("select PhotoID from t_test order by PhotoID desc limit 1");
 					 while(rs.next()){
