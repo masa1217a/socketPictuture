@@ -6,22 +6,24 @@
 #include <netdb.h>
 #include <fcntl.h>
 
-int main(int argc, char const *argv[])
-{
-	char *service = "10007";
-	struct addrinfo hints, *res0, *res;
-	int err;
-	int sock;
-	int fd;
-	char buf[65536];
-	int n, ret;
 
+struct addrinfo hints, *res0, *res;
+int err;
+int sock;
+int fd;
+char buf[65536];
+int n, ret;
+
+int conSocket(int argc, char const *argv[], char *service);
+
+int conSocket(int argc, char const *argv[], char *service)
+{
 	if (argc != 3)
 	{
 			fprintf(stderr, "Usage : %s hostname filename\n", argv[0]);
 			return 1;
 	}
-
+	// ファイルオープン
 	fd = open(argv[2], O_RDONLY);
 	if (fd < 0)
 	{
@@ -37,7 +39,7 @@ int main(int argc, char const *argv[])
 		printf("error %d : %s\n", err, gai_strerror(err));
 		return 1;
 	}
-
+	
 	for (res = res0; res!=NULL; res=res->ai_next)
 	{
 		sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
@@ -62,7 +64,21 @@ int main(int argc, char const *argv[])
 		printf("failed\n");
 		return 1;
 	}
+	return 0;
 
+}
+
+int main(int argc, char const *argv[])
+{
+	int s_error;
+	int point = 50;
+	char *service[2] = {"9989", "7777"};
+	
+	
+	if((s_error = conSocket(argc, argv, service[0])) != 0){
+		perror("connect");
+	}
+	
 	while((n = read(fd, buf, sizeof(buf))) > 0){
 		ret = write(sock, buf, n);
 		if (ret < 1)
@@ -71,7 +87,17 @@ int main(int argc, char const *argv[])
 			break;
 		}
 	}
-
+	
+	close(sock);
+	
+	sleep(1);
+	
+	if((s_error = conSocket(argc, argv, service[1])) != 0){
+		perror("connect");
+	}
+	
+	write(sock, &point, sizeof(point));
+	
 	close(sock);
 
 	return 0;
