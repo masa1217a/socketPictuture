@@ -1,4 +1,5 @@
 package watchdog;
+import java.io.DataInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -7,11 +8,11 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public class Server {
-	final static int PORT = 10007;	// 待受ポート番号
+	final static int[] PORT = {9989, 7777};	// 待受ポート番号
 	
 	static String cameraA = "172.16.107.3";
 	static String cameraB = "172.16.107.2";
-	
+	static int point=0;
 
 	public static void main(String[] args) {
 		
@@ -19,15 +20,16 @@ public class Server {
 		while(true){
 			// Server Start
 			System.out.println("Server Start...");
-			try {
-				// ソケットの準備
-				ServerSocket serverSocket = new ServerSocket(PORT);
-				Socket       socket       = serverSocket.accept();
+			
+				// ソケットオブジェクトの作成
+				SocketObject so = new SocketObject(PORT[0], cameraA, cameraB);
+				// ソケットスタート
+				so.start();
 				
 				// クライアントのアドレスを調べカメラ情報を付加する
 				int camInf;
 				String camName;
-				String clientAdd = socket.getInetAddress().getHostAddress();
+				String clientAdd = so.socket.getInetAddress().getHostAddress();
 				if(clientAdd.equals(cameraA)){
 					camInf = 0; // ０→カメラA
 					camName = "A";
@@ -43,34 +45,29 @@ public class Server {
 				SetDate date = new SetDate();
 				String picName = camName +"_"+ date.str + ".bmp";
 				String outputFilepath = "/home/user/CamPic/"+ picName;       // 受信したファイルの保存先
-
-				// ストリームの準備
-				InputStream  inputStream  = socket.getInputStream();
-				OutputStream outputStream = new FileOutputStream(outputFilepath);
 				
-				System.out.println("Accept client, address:" + socket.getInetAddress().getHostAddress() + ",port:" + socket.getPort() + ".");
-			    
-				// ファイルをストリームで受信
-				int fileLength;
-				while ((fileLength = inputStream.read(buffer)) > 0) {
-					outputStream.write(buffer, 0, fileLength);
-				}
-				
+				// 画像の受信
+				so.SocketBmp(outputFilepath);
+				// ソケット終了
+				so.close();
 				System.out.println("画像を受信");
-				// 終了処理
 				
-				DBAccess dbAccess = new DBAccess(camInf, date.int_Today, date.int_Time, picName, 0);
+				// ソケットオブジェクトの作成
+				SocketObject so1 = new SocketObject(PORT[1], cameraA, cameraB);
+				// ソケットスタート
+				so1.start();
+				//　画像撮影ポイントの取得
+				point = so1.SocketPoint();
+				//　ソケット終了
+				so1.close();
+				System.out.println("撮影ポイントを取得 : point = "+ point);
+				
+				// データベースオブジェクトの作成
+				DBAccess dbAccess = new DBAccess(camInf, date.Today, date.Time, picName, point);
+				//　データベースに挿入
 				dbAccess.DBnextID();
 				dbAccess.DBinsert();
 				
-				outputStream.flush();
-				outputStream.close();
-				inputStream.close();
-				socket.close();
-				serverSocket.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
 		}
 	}
 }
